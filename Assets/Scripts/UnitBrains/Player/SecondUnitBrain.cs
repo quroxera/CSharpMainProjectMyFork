@@ -17,15 +17,13 @@ namespace UnitBrains.Player
         {
             float overheatTemperature = OverheatTemperature;
             float currentTemperature = GetTemperature();
-            float numProjectiles = currentTemperature;
 
             if (currentTemperature >= overheatTemperature)
             {
-                _overheated = true;
                 return;
-            }
+            } 
             IncreaseTemperature();
-            for (int i = 0; i < numProjectiles; i++)
+            for (int i = 0; i <= currentTemperature; i++)
             {
                 var projectile = CreateProjectile(forTarget);
                 AddProjectileToList(projectile, intoList);
