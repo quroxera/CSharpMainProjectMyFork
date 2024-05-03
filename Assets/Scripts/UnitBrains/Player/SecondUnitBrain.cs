@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
+using Model;
 using Model.Runtime.Projectiles;
 using UnityEngine;
+using Utilities;
 
 namespace UnitBrains.Player
 {
@@ -12,12 +14,12 @@ namespace UnitBrains.Player
         private float _temperature = 0f;
         private float _cooldownTime = 0f;
         private bool _overheated;
+        private List<Vector2Int> _currentTargets = new List<Vector2Int>();
 
         protected override void GenerateProjectiles(Vector2Int forTarget, List<BaseProjectile> intoList)
         {
             float overheatTemperature = OverheatTemperature;
             float currentTemperature = GetTemperature();
-
             if (currentTemperature >= overheatTemperature)
             {
                 return;
@@ -32,15 +34,31 @@ namespace UnitBrains.Player
 
         public override Vector2Int GetNextStep()
         {
-            return base.GetNextStep();
+            {
+                if (_currentTargets.Count > 0)
+                {
+                    if (IsTargetInRange(_currentTargets[0]))
+                    {
+                        return unit.Pos;
+                    }
+                    else
+                    {
+                        return unit.Pos.CalcNextStepTowards(_currentTargets[0]);
+                    }
+                }
+                else
+                {
+                    return unit.Pos;
+                }
+            }
         }
 
         protected override List<Vector2Int> SelectTargets()
         {
-            List<Vector2Int> result = GetReachableTargets();
+            List<Vector2Int> result = new List<Vector2Int>();
             float closestDistance = float.MaxValue;
             Vector2Int closestTarget = Vector2Int.zero;
-            foreach (Vector2Int target in result)
+            foreach (Vector2Int target in GetAllTargets())
             {
                 float distance = DistanceToOwnBase(target);
                 if (distance < closestDistance)
@@ -49,13 +67,29 @@ namespace UnitBrains.Player
                     closestTarget = target;
                 }
             }
-            result.Clear();
+            _currentTargets.Clear();
             if (closestDistance < float.MaxValue)
             {
-                result.Add(closestTarget);
+                _currentTargets.Add(closestTarget);
+                if (IsTargetInRange(closestTarget))
+                {
+                    result.Add(closestTarget);
+                }
+            }
+            else
+            {
+                if (IsPlayerUnitBrain)
+                {
+                    _currentTargets.Add(runtimeModel.RoMap.Bases[RuntimeModel.BotPlayerId]);
+                }
+                else
+                {
+                    _currentTargets.Add(runtimeModel.RoMap.Bases[RuntimeModel.PlayerId]);
+                }
             }
             return result;
         }
+
 
         public override void Update(float deltaTime, float time)
         {
