@@ -1,6 +1,9 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using Model;
 using Model.Runtime.Projectiles;
+using UnitBrains.Pathfinding;
+using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using Utilities;
 
@@ -14,7 +17,7 @@ namespace UnitBrains.Player
         private float _temperature = 0f;
         private float _cooldownTime = 0f;
         private bool _overheated;
-        private List<Vector2Int> _currentTargets = new List<Vector2Int>();
+        private List<Vector2Int> UnreachableTargets = new List<Vector2Int>();
 
         protected override void GenerateProjectiles(Vector2Int forTarget, List<BaseProjectile> intoList)
         {
@@ -34,62 +37,69 @@ namespace UnitBrains.Player
 
         public override Vector2Int GetNextStep()
         {
+            if (HasTargetsInRange())
             {
-                if (_currentTargets.Count > 0)
-                {
-                    if (IsTargetInRange(_currentTargets[0]))
-                    {
-                        return unit.Pos;
-                    }
-                    else
-                    {
-                        return unit.Pos.CalcNextStepTowards(_currentTargets[0]);
-                    }
-                }
-                else
-                {
-                    return unit.Pos;
-                }
+                return unit.Pos;
             }
+
+            var target = runtimeModel.RoMap.Bases[IsPlayerUnitBrain ? RuntimeModel.BotPlayerId : RuntimeModel.PlayerId];
+            var path = new DummyUnitPath(runtimeModel, unit.Pos, target);
+
+            return path.GetNextStepFrom(unit.Pos);
         }
 
         protected override List<Vector2Int> SelectTargets()
         {
             List<Vector2Int> result = new List<Vector2Int>();
-            float closestDistance = float.MaxValue;
-            Vector2Int closestTarget = Vector2Int.zero;
-            foreach (Vector2Int target in GetAllTargets())
+            Vector2Int target = GetClosestTarget(GetAllTargets().ToList());
+
+            UnreachableTargets.Clear();
+
+            if (target.magnitude != 0)
             {
-                float distance = DistanceToOwnBase(target);
-                if (distance < closestDistance)
+                UnreachableTargets.Add(target);
+
+                if (IsTargetInRange(target))
                 {
-                    closestDistance = distance;
-                    closestTarget = target;
-                }
-            }
-            _currentTargets.Clear();
-            if (closestDistance < float.MaxValue)
-            {
-                _currentTargets.Add(closestTarget);
-                if (IsTargetInRange(closestTarget))
-                {
-                    result.Add(closestTarget);
+                    result.Add(target);
                 }
             }
             else
             {
                 if (IsPlayerUnitBrain)
                 {
-                    _currentTargets.Add(runtimeModel.RoMap.Bases[RuntimeModel.BotPlayerId]);
+                    result.Add(runtimeModel.RoMap.Bases[RuntimeModel.BotPlayerId]);
                 }
                 else
                 {
-                    _currentTargets.Add(runtimeModel.RoMap.Bases[RuntimeModel.PlayerId]);
+                    result.Add(runtimeModel.RoMap.Bases[RuntimeModel.PlayerId]);
                 }
             }
             return result;
         }
 
+        private Vector2Int GetClosestTarget(List<Vector2Int> closestEnemies)
+        {
+            Vector2Int closestEnemy = Vector2Int.zero;
+            float minDistance = float.MaxValue;
+            foreach (Vector2Int target in closestEnemies)
+            {
+                float distanceToTarget = DistanceToOwnBase(target);
+                if (distanceToTarget < minDistance)
+                {
+                    minDistance = distanceToTarget;
+                    closestEnemy = target;
+                }
+            }
+            if (minDistance < float.MaxValue)
+            {
+                return closestEnemy;
+            }
+            else
+            {
+                return Vector2Int.zero;
+            }
+        }
 
         public override void Update(float deltaTime, float time)
         {
