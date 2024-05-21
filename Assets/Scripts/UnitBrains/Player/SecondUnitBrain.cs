@@ -57,7 +57,7 @@ namespace UnitBrains.Player
                 {
                     return unit.Pos;
                 }
-                var path = new DummyUnitPath(runtimeModel, unit.Pos, targets[0]);
+                var path = new AStarUnitPath(runtimeModel, unit.Pos, targets[0]);
                 return path.GetNextStepFrom(unit.Pos);
             }
             else

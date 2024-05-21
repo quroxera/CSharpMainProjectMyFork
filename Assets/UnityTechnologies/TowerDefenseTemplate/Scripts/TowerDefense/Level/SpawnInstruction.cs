@@ -25,6 +25,6 @@ namespace TowerDefense.Level
 		/// <summary>
 		/// The starting node, where the agent is spawned
 		/// </summary>
-		public Node startingNode;
+		public Nodes.Node startingNode;
 	}
 }

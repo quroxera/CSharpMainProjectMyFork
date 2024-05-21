@@ -100,7 +100,7 @@ namespace TowerDefense.Agents
 		/// Starts the attack timer
 		/// </summary>
 		/// <param name="homeBase"></param>
-		void OnDestinationReached (Node homeBase)
+		void OnDestinationReached (Nodes.Node homeBase)
 		{
 			m_FinalDestinationDamageableBehaviour = homeBase.GetComponent<DamageableBehaviour>();
 			// start timer 

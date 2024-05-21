@@ -49,7 +49,7 @@ namespace TowerDefense.Agents
 		/// <summary>
 		/// Event fired when agent reached its final node
 		/// </summary>
-		public event Action<Node> destinationReached;
+		public event Action<Nodes.Node> destinationReached;
 
 		/// <summary>
 		/// Position offset for an applied affect
@@ -69,7 +69,7 @@ namespace TowerDefense.Agents
 		/// <summary>
 		/// The Current node that the agent must navigate to
 		/// </summary>
-		protected Node m_CurrentNode;
+		protected Nodes.Node m_CurrentNode;
 
 		/// <summary>
 		/// Reference to the level manager
@@ -139,7 +139,7 @@ namespace TowerDefense.Agents
 		/// Sets the node to navigate to
 		/// </summary>
 		/// <param name="node">The node that the agent will navigate to</param>
-		public virtual void SetNode(Node node)
+		public virtual void SetNode(Nodes.Node node)
 		{
 			m_CurrentNode = node;
 		}
@@ -180,7 +180,7 @@ namespace TowerDefense.Agents
 		/// <summary>
 		/// Finds the next node in the path
 		/// </summary>
-		public virtual void GetNextNode(Node currentlyEnteredNode)
+		public virtual void GetNextNode(Nodes.Node currentlyEnteredNode)
 		{
 			// Don't do anything if the calling node is the same as the m_CurrentNode
 			if (m_CurrentNode != currentlyEnteredNode)
@@ -193,7 +193,7 @@ namespace TowerDefense.Agents
 				return;
 			}
 
-			Node nextNode = m_CurrentNode.GetNextNode();
+            Nodes.Node nextNode = m_CurrentNode.GetNextNode();
 			if (nextNode == null)
 			{
 				if (m_NavMeshAgent.enabled)

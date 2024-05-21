@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using View;
 
@@ -30,10 +31,19 @@ namespace UnitBrains.Pathfinding
             highlightCoroutine = StartCoroutine(HighlightCoroutine(path));
         }
 
-        private IEnumerator HighlightCoroutine(BaseUnitPath path)
+        private IEnumerator HighlightCoroutine(BaseUnitPath path) //debug
         {
-            // TODO Implement me
-            yield break;
+            foreach (var point in path.GetPath())
+            {
+                CreateHighlight(point);
+
+                if (allHighlights.Count() > maxHighlights)
+                    DestroyHighlight(0);
+
+                yield return new WaitForSeconds(0.1f);
+            }
+
+            HighlightPath(path);
         }
 
         private void CreateHighlight(Vector2Int atCell)
