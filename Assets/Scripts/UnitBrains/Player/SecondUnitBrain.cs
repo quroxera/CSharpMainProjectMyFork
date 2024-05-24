@@ -51,19 +51,20 @@ namespace UnitBrains.Player
 
         public override Vector2Int GetNextStep()
         {
-            if (targets.Count > 0)
-            {
-                if (IsTargetInRange(targets[0]))
-                {
-                    return unit.Pos;
-                }
-                var path = new AStarUnitPath(runtimeModel, unit.Pos, targets[0]);
-                return path.GetNextStepFrom(unit.Pos);
-            }
-            else
-            {
-                return unit.Pos;
-            }
+            //if (targets.Count > 0)
+            //{
+            //    if (IsTargetInRange(targets[0]))
+            //    {
+            //        return unit.Pos;
+            //    }
+            //    var path = new AStarUnitPath(runtimeModel, unit.Pos, targets[0]);
+            //    return path.GetNextStepFrom(unit.Pos);
+            //}
+            //else
+            //{
+            //    return unit.Pos;
+            //}
+            return base.GetNextStep();
         }
 
 

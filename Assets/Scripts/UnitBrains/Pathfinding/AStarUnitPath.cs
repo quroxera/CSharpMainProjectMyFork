@@ -2,8 +2,8 @@ using Model;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
-using static UnityEngine.GraphicsBuffer;
 namespace UnitBrains.Pathfinding
 {
     public class AStarUnitPath : BaseUnitPath
@@ -12,7 +12,6 @@ namespace UnitBrains.Pathfinding
         private Vector2Int _endPoint;
         private int[] dx = { -1, 0, 1, 0 };
         private int[] dy = { 0, -1, 0, 1 };
-
         public AStarUnitPath(IReadOnlyRuntimeModel runtimeModel, Vector2Int startPoint, Vector2Int endPoint) : base(runtimeModel, startPoint, endPoint)
         {
             _startPoint = startPoint;
@@ -21,18 +20,24 @@ namespace UnitBrains.Pathfinding
 
         protected override void Calculate()
         {
-            path = FindPath().ToArray();
+            if (FindPath() is not null)
+            {
+                path = FindPath().ToArray();
+            }
+            else
+            {
+                path = null;
+            }
 
             if (path == null)
                 path = new Vector2Int[] { StartPoint };
-            
         }
+
 
         public List<Vector2Int> FindPath()
         {
             Node startNode = new Node(_startPoint);
             Node targetNode = new Node(_endPoint);
-
             List<Node> openList = new List<Node> { startNode };
             List<Node> closedList = new List<Node>();
 
@@ -68,8 +73,9 @@ namespace UnitBrains.Pathfinding
                     Vector2Int neighborPos = new Vector2Int(currentNode.Position.x + dx[i], currentNode.Position.y + dy[i]);
 
 
-                    if (!IsValid(neighborPos) && neighborPos != _endPoint)
+                    if (!IsValid(neighborPos) && neighborPos != _endPoint && !IsBlockedByEnemy(neighborPos))
                         continue;
+
 
                     Node neighbor = new Node(neighborPos);
 
@@ -79,19 +85,27 @@ namespace UnitBrains.Pathfinding
                     neighbor.Parent = currentNode;
                     neighbor.CalculateEstimate(targetNode.Position.x, targetNode.Position.y);
                     neighbor.CalculateValue();
-
-                    openList.Add(neighbor);
+                    if (!openList.Contains(neighbor))
+                    {
+                        openList.Add(neighbor);
+                    }
                 }
             }
+
             return null;
         }
 
-
-        bool IsValid(Vector2Int tempPos)
+        private bool IsValid(Vector2Int tempPos)
         {
             bool containsX = tempPos.x >= 0 && tempPos.x < runtimeModel.RoMap.Width;
             bool containsY = tempPos.y >= 0 && tempPos.y < runtimeModel.RoMap.Height;
-            return containsX && containsY && (runtimeModel.IsTileWalkable(new Vector2Int(tempPos.x, tempPos.y)));
+            return containsX && containsY && runtimeModel.IsTileWalkable(tempPos);
+        }
+
+        private bool IsBlockedByEnemy(Vector2Int tempPos)
+        {
+            var botPos = runtimeModel.RoBotUnits.Select(u => u.Pos).Where(u => u == tempPos);
+            return botPos.Any();
         }
     }
 }

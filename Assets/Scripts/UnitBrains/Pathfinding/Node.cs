@@ -31,13 +31,12 @@ namespace UnitBrains.Pathfinding
         {
             if (obj is not Node node)
                 return false;
-            return Position.x == node.Position.x && Position.y == node.Position.y;
+            return Position.Equals(node.Position);
         }
 
-        //public override int GetHashCode()
-        //{
-        //    return HashCode.Combine(Position, Cost, Estimate, Value, Parent);
-        //}
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(Position);
+        }
     }
 }
-
