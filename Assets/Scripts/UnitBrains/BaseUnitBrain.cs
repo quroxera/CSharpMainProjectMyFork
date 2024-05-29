@@ -161,7 +161,6 @@ namespace UnitBrains
                 
                 result.Add(possibleTarget);
             }
-
             return result;
         }
     }

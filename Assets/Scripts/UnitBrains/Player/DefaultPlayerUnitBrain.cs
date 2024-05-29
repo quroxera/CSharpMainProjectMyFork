@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
+using Assets.Scripts.UnitBrains.Player;
 using Model;
-using Model.Runtime.Projectiles;
+using Model.Runtime.ReadOnly;
+using UnitBrains.Pathfinding;
 using UnityEngine;
 
 namespace UnitBrains.Player
@@ -14,12 +16,29 @@ namespace UnitBrains.Player
         {
             list.Sort(CompareByDistanceToOwnBase);
         }
-        
+
         private int CompareByDistanceToOwnBase(Vector2Int a, Vector2Int b)
         {
             var distanceA = DistanceToOwnBase(a);
             var distanceB = DistanceToOwnBase(b);
             return distanceA.CompareTo(distanceB);
+        }
+
+        public override Vector2Int GetNextStep()
+        {
+            Vector2Int recommendedTarget = UnitsCoordinator.GetInstance().recommendedTarget;
+            Vector2Int recommendedPoint = UnitsCoordinator.GetInstance().recommendedPoint;
+
+            AStarUnitPath path = new AStarUnitPath(runtimeModel, unit.Pos, recommendedPoint);
+            if (HasTargetsInRange())
+            {
+                if (IsTargetInRange(recommendedTarget))
+                {
+                    return unit.Pos;
+                }
+                return path.GetNextStepFrom(unit.Pos);
+            }
+            return base.GetNextStep();
         }
     }
 }

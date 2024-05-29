@@ -21,16 +21,16 @@ namespace UnitBrains.Player
         private float _temperature = 0f;
         private float _cooldownTime = 0f;
         private bool _overheated;
-        List<Vector2Int> targets = new List<Vector2Int>();
-        private static int unitCounter = 0;
-        private int unitNumber = 0;
-        private const int maxTargets = 3;
+        //List<Vector2Int> targets = new List<Vector2Int>();
+        //private static int unitCounter = 0;
+        //private int unitNumber = 0;
+        //private const int maxTargets = 3;
 
 
-        public SecondUnitBrain()
-        {
-            unitNumber = unitCounter++;
-        }
+        //public SecondUnitBrain()
+        //{
+        //    unitNumber = unitCounter++;
+        //}
 
         protected override void GenerateProjectiles(Vector2Int forTarget, List<BaseProjectile> intoList)
         {
@@ -70,40 +70,41 @@ namespace UnitBrains.Player
 
         protected override List<Vector2Int> SelectTargets()
         {
-            List<Vector2Int> result = new List<Vector2Int>();
+            //List<Vector2Int> result = new List<Vector2Int>();
 
-            targets.Clear();
+            //targets.Clear();
 
-            foreach (Vector2Int target in GetAllTargets())
-            {
-                targets.Add(target);
-            }
-            if (targets.Count == 0)
-            {
-                if (IsPlayerUnitBrain)
-                {
-                    targets.Add(runtimeModel.RoMap.Bases[RuntimeModel.BotPlayerId]);
-                }
-                else
-                {
-                    targets.Add(runtimeModel.RoMap.Bases[RuntimeModel.PlayerId]);
-                }
-            }
-            else
-            {
-                targets.Sort((x, y) => DistanceToOwnBase(x).CompareTo(DistanceToOwnBase(y)));
+            //foreach (Vector2Int target in GetAllTargets())
+            //{
+            //    targets.Add(target);
+            //}
+            //if (targets.Count == 0)
+            //{
+            //    if (IsPlayerUnitBrain)
+            //    {
+            //        targets.Add(runtimeModel.RoMap.Bases[RuntimeModel.BotPlayerId]);
+            //    }
+            //    else
+            //    {
+            //        targets.Add(runtimeModel.RoMap.Bases[RuntimeModel.PlayerId]);
+            //    }
+            //}
+            //else
+            //{
+            //    targets.Sort((x, y) => DistanceToOwnBase(x).CompareTo(DistanceToOwnBase(y)));
 
-                for (int i = 0; i < maxTargets && i < targets.Count; i++)
-                {
-                    int targetIndex = (unitNumber + i) % targets.Count;
+            //    for (int i = 0; i < maxTargets && i < targets.Count; i++)
+            //    {
+            //        int targetIndex = (unitNumber + i) % targets.Count;
 
-                    if (IsTargetInRange(targets[targetIndex]))
-                    {
-                        result.Add(targets[targetIndex]);
-                    }
-                }
-            }
-            return result;
+            //        if (IsTargetInRange(targets[targetIndex]))
+            //        {
+            //            result.Add(targets[targetIndex]);
+            //        }
+            //    }
+            //}
+            //return result;
+            return base.SelectTargets();
         }
 
 
