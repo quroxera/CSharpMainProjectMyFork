@@ -11,6 +11,7 @@ namespace Assets.Scripts.UnitBrains.Player
     public class UnitsCoordinator
     {
         private static UnitsCoordinator _instance;
+
         private IReadOnlyRuntimeModel _runtimeModel;
         private TimeUtil _timeUtil;
         private float _attackRange;
@@ -23,7 +24,7 @@ namespace Assets.Scripts.UnitBrains.Player
             _runtimeModel = ServiceLocator.Get<IReadOnlyRuntimeModel>();
             _timeUtil = ServiceLocator.Get<TimeUtil>();
             _attackRange = _runtimeModel.RoPlayerUnits.First().Config.AttackRange;
-            _timeUtil.AddUpdateAction(SelectTargets);
+            _timeUtil.AddUpdateAction(UpdateRecommendations);
         }
 
         public static UnitsCoordinator GetInstance()
@@ -34,7 +35,7 @@ namespace Assets.Scripts.UnitBrains.Player
             return _instance;
         }
 
-        private void SelectTargets(float deltaTime)
+        private void UpdateRecommendations(float deltaTime)
         {
             List<IReadOnlyUnit> targetList = _runtimeModel.RoBotUnits.ToList();
 
@@ -54,6 +55,7 @@ namespace Assets.Scripts.UnitBrains.Player
 
         public void SelectRecommendedTarget(List<IReadOnlyUnit> targetList)
         {
+            Debug.Log("IsEnemyOnPlayerSide: " + _isEnemyOnPlayerSide);  
             if (_isEnemyOnPlayerSide)
             {
                 SortByDistanceToPlayerBase(targetList);
@@ -74,27 +76,31 @@ namespace Assets.Scripts.UnitBrains.Player
 
         public void SelectRecommendedPoint(List<IReadOnlyUnit> targetList)
         {
-            if (_isEnemyOnPlayerSide)
+            if (_isEnemyOnPlayerSide) 
+            { 
                 recommendedPoint = _runtimeModel.RoMap.Bases[RuntimeModel.PlayerId] + new Vector2Int(1, 1);
+                Debug.Log("RecommendedPoint: " + recommendedPoint); 
+            }
             else
             {
                 SortByDistanceToPlayerBase(targetList);
 
-                int x = targetList.First().Pos.x - (int)Math.Round(_attackRange);
+                int x = targetList.First().Pos.x ;
                 int y = targetList.First().Pos.y - (int)Math.Round(_attackRange);
 
                 recommendedPoint = new Vector2Int(x, y);
+                Debug.Log("RecommendedPoint: " + recommendedPoint);
             }
         }
 
         private void IsEnemyOnPlayerSide(List<IReadOnlyUnit> targetList)
         {
             _isEnemyOnPlayerSide = false;
-            int playerSideX = _runtimeModel.RoMap.Width / 2;
+            int playerSideY = _runtimeModel.RoMap.Height / 2;
 
             foreach (var target in targetList)
             {
-                if (target.Pos.x < playerSideX)
+                if (target.Pos.y < playerSideY)
                 {
                     _isEnemyOnPlayerSide = true;
                     return;
