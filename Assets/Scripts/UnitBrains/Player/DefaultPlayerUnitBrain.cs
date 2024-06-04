@@ -9,6 +9,7 @@ namespace UnitBrains.Player
 {
     public class DefaultPlayerUnitBrain : BaseUnitBrain
     {
+        protected UnitsCoordinator unitsCoordinator = new UnitsCoordinator(RuntimeModel.PlayerId);
         protected float DistanceToOwnBase(Vector2Int fromPos) =>
             Vector2Int.Distance(fromPos, runtimeModel.RoMap.Bases[RuntimeModel.PlayerId]);
 
@@ -26,7 +27,7 @@ namespace UnitBrains.Player
 
         public override Vector2Int GetNextStep()
         {
-            UnitsCoordinator unitsCoordinator = UnitsCoordinator.GetInstance();
+
             Vector2Int recommendedTarget = unitsCoordinator.recommendedTarget;
             Vector2Int recommendedPoint = unitsCoordinator.recommendedPoint;
 
@@ -47,7 +48,7 @@ namespace UnitBrains.Player
             var result = new List<Vector2Int>();
 
             var targets = GetReachableTargets();
-            var recommendedTarget = UnitsCoordinator.GetInstance().recommendedTarget;
+            var recommendedTarget = unitsCoordinator.recommendedTarget;
 
             if (targets.Contains(recommendedTarget))
                 result.Add(recommendedTarget);

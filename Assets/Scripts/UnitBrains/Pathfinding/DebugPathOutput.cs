@@ -9,8 +9,8 @@ namespace UnitBrains.Pathfinding
     public class DebugPathOutput : MonoBehaviour
     {
         [SerializeField] private GameObject cellHighlightPrefab;
-        [SerializeField] private int maxHighlights = 5;
-        private static float highlightDelay = 0.2f; 
+        //[SerializeField] private int maxHighlights = 5;
+        //private static float highlightDelay = 0.2f; 
         public BaseUnitPath Path { get; private set; }
         private readonly List<GameObject> allHighlights = new();
         private Coroutine highlightCoroutine;

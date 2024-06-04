@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using Assets.Scripts.UnitBrains.Player;
 using Model;
 using Model.Runtime.Projectiles;
 using Model.Runtime.ReadOnly;
@@ -15,8 +16,9 @@ namespace UnitBrains
         public virtual string TargetUnitName => string.Empty;
         public virtual bool IsPlayerUnitBrain => true;
         public virtual BaseUnitPath ActivePath => _activePath;
-        
+
         protected Unit unit { get; private set; }
+        protected UnitsCoordinator coordinator;
         protected IReadOnlyRuntimeModel runtimeModel => ServiceLocator.Get<IReadOnlyRuntimeModel>();
         private BaseUnitPath _activePath = null;
         
@@ -64,6 +66,11 @@ namespace UnitBrains
         public void SetUnit(Unit unit)
         {
             this.unit = unit;
+        }
+
+        public void SetCoordinator(UnitsCoordinator coordinator)
+        {
+             this.coordinator = coordinator;
         }
 
         public virtual void Update(float deltaTime, float time)

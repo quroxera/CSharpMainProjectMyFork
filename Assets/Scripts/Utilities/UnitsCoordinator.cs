@@ -3,6 +3,7 @@ using Model.Runtime.ReadOnly;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using Utilities;
 
@@ -10,44 +11,43 @@ namespace Assets.Scripts.UnitBrains.Player
 {
     public class UnitsCoordinator
     {
-        private static UnitsCoordinator _instance;
-
         private IReadOnlyRuntimeModel _runtimeModel;
         private TimeUtil _timeUtil;
         private float _attackRange;
-        private bool _isEnemyOnPlayerSide = false;
+        private int _unitID;
+        private bool _isEnemyOnUnitSide = false;
         public Vector2Int recommendedTarget;
         public Vector2Int recommendedPoint;
 
-        private UnitsCoordinator()
+        public UnitsCoordinator(int unitID)
         {
             _runtimeModel = ServiceLocator.Get<IReadOnlyRuntimeModel>();
             _timeUtil = ServiceLocator.Get<TimeUtil>();
-            _attackRange = _runtimeModel.RoPlayerUnits.First().Config.AttackRange;
+            _unitID = unitID;
+            if (_runtimeModel.RoPlayerUnits.Any())
+            {
+                _attackRange = _unitID == RuntimeModel.PlayerId
+                ? _runtimeModel.RoPlayerUnits.First().Config.AttackRange
+                : _runtimeModel.RoBotUnits.First().Config.AttackRange;
+            }
             _timeUtil.AddUpdateAction(UpdateRecommendations);
-        }
-
-        public static UnitsCoordinator GetInstance()
-        {
-            if (_instance == null)
-                _instance = new UnitsCoordinator();
-
-            return _instance;
         }
 
         private void UpdateRecommendations(float deltaTime)
         {
-            List<IReadOnlyUnit> targetList = _runtimeModel.RoBotUnits.ToList();
+            List<IReadOnlyUnit> targetList = _unitID == RuntimeModel.PlayerId 
+                ? _runtimeModel.RoBotUnits.ToList() 
+                : _runtimeModel.RoPlayerUnits.ToList();
 
             if (targetList.Count == 0)
             {
-                Vector2Int botBasePos = _runtimeModel.RoMap.Bases[RuntimeModel.BotPlayerId];
-                recommendedTarget = botBasePos;
-                recommendedPoint = botBasePos;
+                Vector2Int targetBasePos = _runtimeModel.RoMap.Bases[Math.Abs(_unitID - 1)];
+                recommendedTarget = targetBasePos;
+                recommendedPoint = targetBasePos;
             }
             else
             {
-                IsEnemyOnPlayerSide(targetList);
+                IsEnemyOnUnitSide(targetList);
                 SelectRecommendedTarget(targetList);
                 SelectRecommendedPoint(targetList);
             }
@@ -55,10 +55,10 @@ namespace Assets.Scripts.UnitBrains.Player
 
         public void SelectRecommendedTarget(List<IReadOnlyUnit> targetList)
         {
-            Debug.Log("IsEnemyOnPlayerSide: " + _isEnemyOnPlayerSide);  
-            if (_isEnemyOnPlayerSide)
+            Debug.Log("IsEnemyOnUnitSide: " + _isEnemyOnUnitSide + " " + _unitID);
+            if (_isEnemyOnUnitSide)
             {
-                SortByDistanceToPlayerBase(targetList);
+                SortByDistanceToBase(targetList);
             }
             else
             {
@@ -70,47 +70,56 @@ namespace Assets.Scripts.UnitBrains.Player
             }
             else
             {
-                recommendedTarget = _runtimeModel.RoMap.Bases[RuntimeModel.BotPlayerId];
+                if (_unitID == RuntimeModel.PlayerId)
+                {
+                    recommendedTarget = _runtimeModel.RoMap.Bases[RuntimeModel.BotPlayerId];
+                }
+                else if (_unitID == RuntimeModel.BotPlayerId)
+                {
+                    recommendedTarget = _runtimeModel.RoMap.Bases[RuntimeModel.PlayerId];
+                }
             }
         }
 
-        public void SelectRecommendedPoint(List<IReadOnlyUnit> targetList)
+        private void SelectRecommendedPoint(List<IReadOnlyUnit> targetList)
         {
-            if (_isEnemyOnPlayerSide) 
-            { 
-                recommendedPoint = _runtimeModel.RoMap.Bases[RuntimeModel.PlayerId] + new Vector2Int(1, 1);
-                Debug.Log("RecommendedPoint: " + recommendedPoint); 
+            if (_isEnemyOnUnitSide)
+            {
+                recommendedPoint = _runtimeModel.RoMap.Bases[_unitID] + Vector2Int.one;
+                Debug.Log("RecommendedPoint: " + recommendedPoint + " " + _unitID);
             }
             else
             {
-                SortByDistanceToPlayerBase(targetList);
+                SortByDistanceToBase(targetList);
 
-                int x = targetList.First().Pos.x ;
+                int x = targetList.First().Pos.x;
                 int y = targetList.First().Pos.y - (int)Math.Round(_attackRange);
 
                 recommendedPoint = new Vector2Int(x, y);
-                Debug.Log("RecommendedPoint: " + recommendedPoint);
+                Debug.Log("RecommendedPoint: " + recommendedPoint + " " + _unitID);
             }
         }
 
-        private void IsEnemyOnPlayerSide(List<IReadOnlyUnit> targetList)
+        public void IsEnemyOnUnitSide(List<IReadOnlyUnit> targetList)
         {
-            _isEnemyOnPlayerSide = false;
-            int playerSideY = _runtimeModel.RoMap.Height / 2;
-
+            _isEnemyOnUnitSide = false;
+            int unitSideY = _runtimeModel.RoMap.Height / 2;
+            Debug.Log("Unit side Y: " + unitSideY + " " + _unitID);
             foreach (var target in targetList)
             {
-                if (target.Pos.y < playerSideY)
+                if (_unitID == RuntimeModel.PlayerId 
+                    ? target.Pos.y < unitSideY 
+                    : target.Pos.y > unitSideY)
                 {
-                    _isEnemyOnPlayerSide = true;
+                    _isEnemyOnUnitSide = true;
                     return;
                 }
             }
         }
 
-        private void SortByDistanceToPlayerBase(List<IReadOnlyUnit> targetList)
+        private void SortByDistanceToBase(List<IReadOnlyUnit> targetList)
         {
-            targetList.Sort(CompareByDistanceToPlayerBase);
+            targetList.Sort(CompareByDistanceToBase);
         }
 
         private void SortByHealth(List<IReadOnlyUnit> targetList)
@@ -118,11 +127,11 @@ namespace Assets.Scripts.UnitBrains.Player
             targetList.Sort(CompareByHealth);
         }
 
-        private int CompareByDistanceToPlayerBase(IReadOnlyUnit targetA, IReadOnlyUnit targetB)
+        private int CompareByDistanceToBase(IReadOnlyUnit targetA, IReadOnlyUnit targetB)
         {
-            var playerBaseId = _runtimeModel.RoMap.Bases[RuntimeModel.PlayerId];
-            var distanceA = Vector2Int.Distance(targetA.Pos, playerBaseId);
-            var distanceB = Vector2Int.Distance(targetB.Pos, playerBaseId);
+            var basePos = _runtimeModel.RoMap.Bases[_unitID];
+            var distanceA = Vector2Int.Distance(targetA.Pos, basePos);
+            var distanceB = Vector2Int.Distance(targetB.Pos, basePos);
             return distanceA.CompareTo(distanceB);
         }
 
