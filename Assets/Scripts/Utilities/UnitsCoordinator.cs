@@ -55,7 +55,7 @@ namespace Assets.Scripts.UnitBrains.Player
 
         public void SelectRecommendedTarget(List<IReadOnlyUnit> targetList)
         {
-            Debug.Log("IsEnemyOnUnitSide: " + _isEnemyOnUnitSide + " " + _unitID);
+            //Debug.Log("IsEnemyOnUnitSide: " + _isEnemyOnUnitSide + " " + _unitID);
             if (_isEnemyOnUnitSide)
             {
                 SortByDistanceToBase(targetList);
@@ -86,7 +86,7 @@ namespace Assets.Scripts.UnitBrains.Player
             if (_isEnemyOnUnitSide)
             {
                 recommendedPoint = _runtimeModel.RoMap.Bases[_unitID] + Vector2Int.one;
-                Debug.Log("RecommendedPoint: " + recommendedPoint + " " + _unitID);
+                //Debug.Log("RecommendedPoint: " + recommendedPoint + " " + _unitID);
             }
             else
             {
@@ -96,7 +96,7 @@ namespace Assets.Scripts.UnitBrains.Player
                 int y = targetList.First().Pos.y - (int)Math.Round(_attackRange);
 
                 recommendedPoint = new Vector2Int(x, y);
-                Debug.Log("RecommendedPoint: " + recommendedPoint + " " + _unitID);
+                //Debug.Log("RecommendedPoint: " + recommendedPoint + " " + _unitID);
             }
         }
 
@@ -104,7 +104,7 @@ namespace Assets.Scripts.UnitBrains.Player
         {
             _isEnemyOnUnitSide = false;
             int unitSideY = _runtimeModel.RoMap.Height / 2;
-            Debug.Log("Unit side Y: " + unitSideY + " " + _unitID);
+            //Debug.Log("Unit side Y: " + unitSideY + " " + _unitID);
             foreach (var target in targetList)
             {
                 if (_unitID == RuntimeModel.PlayerId 

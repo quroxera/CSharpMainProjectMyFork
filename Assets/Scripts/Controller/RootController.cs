@@ -12,7 +12,10 @@ namespace Controller
         private readonly RuntimeModel _runtimeModel;
         private readonly LevelController _levelController;
         
+        private readonly StatusEffectsSystem _statusEffectsSystem;
+
         private RootView _rootView;
+
 
         public RootController(Settings settings, Canvas targetCanvas)
         {
@@ -30,7 +33,10 @@ namespace Controller
 
             var vfxView = SpawnVFXView();
             ServiceLocator.Register(vfxView);
-            
+
+            _statusEffectsSystem = new StatusEffectsSystem();
+            ServiceLocator.Register(_statusEffectsSystem);
+
             _levelController = new(_runtimeModel, this);
             
             _rootView.ShowStartMenu();

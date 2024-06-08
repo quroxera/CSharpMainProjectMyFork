@@ -29,7 +29,6 @@ namespace Controller
             _rootController = rootController;
             _botController = new BotController(OnBotUnitChosen);
             _simulationController = new(runtimeModel, OnLevelFinished);
-            
             _rootView = ServiceLocator.Get<RootView>();
             _gameplayView = ServiceLocator.Get<Gameplay3dView>();
             _settings = ServiceLocator.Get<Settings>();
