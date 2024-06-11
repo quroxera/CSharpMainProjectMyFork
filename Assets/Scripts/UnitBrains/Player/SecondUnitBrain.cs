@@ -104,7 +104,6 @@ namespace UnitBrains.Player
                 }
             }
             return result;
-            //return base.SelectTargets();
         }
 
 

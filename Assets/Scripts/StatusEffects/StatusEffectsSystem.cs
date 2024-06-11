@@ -27,7 +27,7 @@ public class StatusEffectsSystem
         }
         else
         {
-            Debug.Log($"{statusEffect.GetType().Name} is already applied to unit {unit}");
+            Debug.Log($"{statusEffect.GetType().Name} is already applied to unit at position {unit.Pos}");
         }
     }
 
@@ -53,6 +53,21 @@ public class StatusEffectsSystem
                 }
             }
         }
+    }
+
+    public bool HasStatusEffect(Unit unit, Type statusEffectType)
+    {
+        if (_unitsStatusEffects.ContainsKey(unit))
+        {
+            foreach (StatusEffects statusEffect in _unitsStatusEffects[unit])
+            {
+                if (statusEffect.GetType() == statusEffectType)
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     public float GetMovementSpeedModifier(Unit unit)

@@ -62,13 +62,13 @@ namespace Model.Runtime
             {
                 float moveModifier = 1f;
 
-                if (Random.Range(1, 100) <= 10)
-                {
-                    ServiceLocator.Get<StatusEffectsSystem>().AddStatusEffect(this, new SpeedBuff(this));
-                    moveModifier = _statusEffectsSystem.GetMovementSpeedModifier(this);
-                }
+                //if (Random.Range(1, 100) <= 10)
+                //{
+                //    ServiceLocator.Get<StatusEffectsSystem>().AddStatusEffect(this, new SpeedBuff(this));
+                //    moveModifier = _statusEffectsSystem.GetMovementSpeedModifier(this);
+                //}
                 _nextMoveTime = time + Config.MoveDelay * moveModifier;
-                Debug.Log("Move modifier: " + moveModifier);
+                //Debug.Log("Move modifier: " + moveModifier);
                 //Debug.Log("Next move time: " + _nextMoveTime);
                 Move();
             }
@@ -76,13 +76,13 @@ namespace Model.Runtime
             if (_nextAttackTime < time && Attack())
             {
                 float attackModifier = 1f;
-                if (Random.Range(1, 100) <= 10)
-                {
-                    ServiceLocator.Get<StatusEffectsSystem>().AddStatusEffect(this, new AttackSpeedBuff(this));
-                    attackModifier = _statusEffectsSystem.GetAttackSpeedModifier(this);
-                }
+                //if (Random.Range(1, 100) <= 10)
+                //{
+                //    ServiceLocator.Get<StatusEffectsSystem>().AddStatusEffect(this, new AttackSpeedBuff(this));
+                //    attackModifier = _statusEffectsSystem.GetAttackSpeedModifier(this);
+                //}
                 _nextAttackTime = time + Config.AttackDelay * attackModifier;
-                Debug.Log("AttackModifier: " + attackModifier);
+                //Debug.Log("AttackModifier: " + attackModifier);
                 //Debug.Log("Next attack time: " + _nextAttackTime);
             }
         }
@@ -124,11 +124,11 @@ namespace Model.Runtime
         public void TakeDamage(int projectileDamage)
         {
             Health -= projectileDamage;
-            if (Random.Range(1, 100) <= 5)
-            {
-                ServiceLocator.Get<StatusEffectsSystem>().AddStatusEffect(this, new SlowDebuff(this));
-                ServiceLocator.Get<StatusEffectsSystem>().AddStatusEffect(this, new AttackSpeedDebuff(this));
-            }
+            //if (Random.Range(1, 100) <= 5)
+            //{
+            //    ServiceLocator.Get<StatusEffectsSystem>().AddStatusEffect(this, new SlowDebuff(this));
+            //    ServiceLocator.Get<StatusEffectsSystem>().AddStatusEffect(this, new AttackSpeedDebuff(this));
+            //}
         }
     }
 }
