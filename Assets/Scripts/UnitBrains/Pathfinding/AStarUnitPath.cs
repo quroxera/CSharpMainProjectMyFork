@@ -1,49 +1,37 @@
 using Model;
-using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+
+
 namespace UnitBrains.Pathfinding
 {
     public class AStarUnitPath : BaseUnitPath
     {
-        private Vector2Int _startPoint;
-        private Vector2Int _endPoint;
+        private Node _nearestBlockedNode;
+        private bool _isTargetReached;
+        private bool _isBlockedByEnemy;
+        private int _maxIterations = 100;
+
         private int[] dx = { -1, 0, 1, 0 };
         private int[] dy = { 0, -1, 0, 1 };
         public AStarUnitPath(IReadOnlyRuntimeModel runtimeModel, Vector2Int startPoint, Vector2Int endPoint) : base(runtimeModel, startPoint, endPoint)
         {
-            _startPoint = startPoint;
-            _endPoint = endPoint;
+
         }
 
         protected override void Calculate()
         {
-            if (FindPath() is not null)
-            {
-                path = FindPath().ToArray();
-            }
-            else
-            {
-                path = null;
-            }
+            var startNode = new Node(startPoint);
+            var targetNode = new Node(endPoint);
 
-            if (path == null)
-                path = new Vector2Int[] { StartPoint };
-        }
-
-
-        public List<Vector2Int> FindPath()
-        {
-            Node startNode = new Node(_startPoint);
-            Node targetNode = new Node(_endPoint);
-            List<Node> openList = new List<Node> { startNode };
-            List<Node> closedList = new List<Node>();
+            var openList = new List<Node> { startNode };
+            var closedList = new List<Node>();
+            var iterationsCounter = 0;
 
             while (openList.Count > 0)
             {
-                Node currentNode = openList[0];
+                var currentNode = openList[0];
 
                 foreach (var node in openList)
                 {
@@ -54,45 +42,72 @@ namespace UnitBrains.Pathfinding
                 openList.Remove(currentNode);
                 closedList.Add(currentNode);
 
-                if (currentNode.Position.x == targetNode.Position.x && currentNode.Position.y == targetNode.Position.y)
+                if (_isTargetReached)
                 {
-                    List<Vector2Int> path = new List<Vector2Int>();
-
-                    while (currentNode != null)
-                    {
-                        path.Add(currentNode.Position);
-                        currentNode = currentNode.Parent;
-                    }
-
-                    path.Reverse();
-                    return path;
+                    path = FindPath(currentNode);
+                    return;
                 }
 
-                for (int i = 0; i < dx.Length; i++)
+                CheckNeighbourNodes(currentNode, targetNode, openList, closedList);
+                iterationsCounter++;
+
+                if (iterationsCounter >= _maxIterations)
                 {
-                    Vector2Int neighborPos = new Vector2Int(currentNode.Position.x + dx[i], currentNode.Position.y + dy[i]);
-
-
-                    if (!IsValid(neighborPos) && neighborPos != _endPoint && !IsBlockedByEnemy(neighborPos))
-                        continue;
-
-
-                    Node neighbor = new Node(neighborPos);
-
-                    if (closedList.Contains(neighbor))
-                        continue;
-
-                    neighbor.Parent = currentNode;
-                    neighbor.CalculateEstimate(targetNode.Position.x, targetNode.Position.y);
-                    neighbor.CalculateValue();
-                    if (!openList.Contains(neighbor))
-                    {
-                        openList.Add(neighbor);
-                    }
+                    break;
                 }
             }
 
-            return null;
+            if (_isBlockedByEnemy)
+            {
+                path = FindPath(_nearestBlockedNode);
+                return;
+            }
+
+            path = new[] { startNode.Position };
+        }
+
+        private Vector2Int[] FindPath(Node currentNode)
+        {
+            List<Vector2Int> path = new();
+
+            while (currentNode != null)
+            {
+                path.Add(currentNode.Position);
+                currentNode = currentNode.Parent;
+            }
+
+            path.Reverse();
+            return path.ToArray();
+        }
+
+        private void CheckNeighbourNodes(Node currentNode, Node targetNode, List<Node> openList, List<Node> closedList)
+        {
+            for (int i = 0; i < dx.Length; i++)
+            {
+                Vector2Int neighbourPos = new Vector2Int(currentNode.Position.x + dx[i], currentNode.Position.y + dy[i]);
+
+                if (neighbourPos == targetNode.Position)
+                    _isTargetReached = true;
+
+                if (IsValid(neighbourPos) || _isTargetReached)
+                {
+                    Node neighbour = new Node(neighbourPos);
+
+                    if (closedList.Contains(neighbour))
+                        continue;
+
+                    neighbour.Parent = currentNode;
+                    neighbour.CalculateEstimate(targetNode.Position.x, targetNode.Position.y);
+                    neighbour.CalculateValue();
+                    openList.Add(neighbour);
+                }
+
+                if (IsBlockedByEnemy(neighbourPos) && !_isBlockedByEnemy || IsBlockedByAlly(neighbourPos))
+                {
+                    _isBlockedByEnemy = true;
+                    _nearestBlockedNode = currentNode;
+                }
+            }
         }
 
         private bool IsValid(Vector2Int tempPos)
@@ -107,6 +122,11 @@ namespace UnitBrains.Pathfinding
             var botPos = runtimeModel.RoBotUnits.Select(u => u.Pos).Where(u => u == tempPos);
             return botPos.Any();
         }
+
+        private bool IsBlockedByAlly(Vector2Int tempPos)
+        {
+            var allyPos = runtimeModel.RoPlayerUnits.Select(u => u.Pos).Where(u => u == tempPos);
+            return allyPos.Any();
+        }
     }
 }
-

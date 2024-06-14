@@ -15,6 +15,7 @@ namespace UnitBrains
     {
         public virtual string TargetUnitName => string.Empty;
         public virtual bool IsPlayerUnitBrain => true;
+        //public virtual bool IsPlayerSupportUnitBrain => false;
         public virtual BaseUnitPath ActivePath => _activePath;
 
         protected Unit unit { get; private set; }

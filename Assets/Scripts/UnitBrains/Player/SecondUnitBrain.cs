@@ -62,9 +62,8 @@ namespace UnitBrains.Player
             }
             else
             {
-                return unit.Pos;
+                return base.GetNextStep();
             }
-            //return base.GetNextStep();
         }
 
 

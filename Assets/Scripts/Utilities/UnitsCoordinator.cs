@@ -38,6 +38,7 @@ namespace Assets.Scripts.UnitBrains.Player
             List<IReadOnlyUnit> targetList = _unitID == RuntimeModel.PlayerId 
                 ? _runtimeModel.RoBotUnits.ToList() 
                 : _runtimeModel.RoPlayerUnits.ToList();
+            //Debug.Log($"TargetList Count: {targetList.Count}");
 
             if (targetList.Count == 0)
             {
@@ -48,8 +49,8 @@ namespace Assets.Scripts.UnitBrains.Player
             else
             {
                 IsEnemyOnUnitSide(targetList);
-                SelectRecommendedTarget(targetList);
                 SelectRecommendedPoint(targetList);
+                SelectRecommendedTarget(targetList);
             }
         }
 
@@ -67,6 +68,7 @@ namespace Assets.Scripts.UnitBrains.Player
             if (targetList.Count > 0)
             {
                 recommendedTarget = targetList.First().Pos;
+                //Debug.Log($"Recommended target: {recommendedTarget}");
             }
             else
             {

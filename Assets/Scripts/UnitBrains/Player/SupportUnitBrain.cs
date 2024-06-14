@@ -1,44 +1,34 @@
-using Model.Runtime;
 using Model.Runtime.Projectiles;
 using Model.Runtime.ReadOnly;
+using Model;
 using System.Collections.Generic;
-using System.Linq;
 using UnitBrains.Player;
 using UnityEngine;
 using Utilities;
 using View;
+using Model.Runtime;
+using System.Linq;
+using UnitBrains.Pathfinding;
 
 public class SupportUnitBrain : DefaultPlayerUnitBrain
 {
     public override string TargetUnitName => "Support";
-
+    //public override bool IsPlayerSupportUnitBrain => true;
     private float castModeTimer = 0;
     private float castCooldown = 0.2f;
-
     private float castDelay = 0.5f;
     private float delayTimer = 0;
-
     private VFXView _vfxView = ServiceLocator.Get<VFXView>();
     private StatusEffectsSystem _statusEffectsSystem = ServiceLocator.Get<StatusEffectsSystem>();
-
     private bool _isCastMode = false;
     private bool _isMovingMode = true;
-
     private List<IReadOnlyUnit> _allies;
-
-    //public SupportUnitBrain()
-    //{
-    //    _vfxView = ServiceLocator.Get<VFXView>();
-    //    _statusEffectsSystem = ServiceLocator.Get<StatusEffectsSystem>();
-    //    _allies = runtimeModel.RoUnits.Where(u => u.Config.IsPlayerUnit == IsPlayerUnitBrain).ToList();
-    //}
 
     protected override void GenerateProjectiles(Vector2Int forTarget, List<BaseProjectile> intoList)
     {
-
     }
 
-    protected void CastBuffs(/*List<IReadOnlyUnit> allies,*/ StatusEffectsSystem statusEffectsSystem)
+    protected void CastBuffs(StatusEffectsSystem statusEffectsSystem)
     {
         _allies = runtimeModel.RoUnits.Where(u => u.Config.IsPlayerUnit == IsPlayerUnitBrain).ToList();
         Debug.Log($"Number of allies: {_allies.Count}");
@@ -77,7 +67,7 @@ public class SupportUnitBrain : DefaultPlayerUnitBrain
 
             if (delayTimer >= castDelay)
             {
-                CastBuffs(/*_allies,*/_statusEffectsSystem);
+                CastBuffs(_statusEffectsSystem);
                 delayTimer = 0;
                 _isCastMode = false;
                 _isMovingMode = true;
@@ -102,4 +92,5 @@ public class SupportUnitBrain : DefaultPlayerUnitBrain
     {
         return _isMovingMode ? base.GetNextStep() : unit.Pos;
     }
+
 }

@@ -9,8 +9,6 @@ namespace UnitBrains.Pathfinding
     {
         public Vector2Int StartPoint => startPoint;
         public Vector2Int EndPoint => endPoint;
-        public IEnumerable<Vector2Int> Node { get; internal set; }
-
         protected readonly IReadOnlyRuntimeModel runtimeModel;
         protected readonly Vector2Int startPoint;
         protected readonly Vector2Int endPoint;
@@ -22,7 +20,6 @@ namespace UnitBrains.Pathfinding
         {
             if (path == null)
                 Calculate();
-          //  Debug.LogError($"Getpath {path.GetValue(0)}");
             return path;
         }
 
@@ -34,10 +31,9 @@ namespace UnitBrains.Pathfinding
 
                 if (found)
                     return cell;
-                //Debug.LogError($"Cell {cell}");
                 found = cell == unitPos;
             }
-            
+
             //Debug.LogError($"Unit {unitPos} is not on the path");
             return unitPos;
         }
