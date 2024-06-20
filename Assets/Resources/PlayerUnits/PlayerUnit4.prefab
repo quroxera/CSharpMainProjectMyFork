@@ -63,6 +63,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _isPlayerUnit: 1
   _name: Support
+  _type: SupportUnit
   _icon: {fileID: 21300000, guid: f39897d7336017e41861d6d6fdc5c96c, type: 3}
   _cost: 50
   _maxHealth: 400

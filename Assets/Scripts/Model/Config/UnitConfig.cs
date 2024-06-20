@@ -7,6 +7,7 @@ namespace Model.Config
     {
         [SerializeField] private bool _isPlayerUnit;
         [SerializeField] private string _name;
+        [SerializeField] private string _type;
         [SerializeField] private Sprite _icon;
         [SerializeField] private int _cost;
         [SerializeField] private int _maxHealth;
@@ -19,6 +20,7 @@ namespace Model.Config
         
         public bool IsPlayerUnit => _isPlayerUnit;
         public string Name => _name;
+        public string Type => _type;
         public Sprite Icon => _icon;
         public int Cost => _cost;
         public int MaxHealth => _maxHealth;

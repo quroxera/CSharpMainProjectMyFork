@@ -1,54 +1,48 @@
 using Model.Runtime.Projectiles;
 using Model.Runtime.ReadOnly;
-using Model;
 using System.Collections.Generic;
 using UnitBrains.Player;
 using UnityEngine;
 using Utilities;
 using View;
-using Model.Runtime;
 using System.Linq;
-using UnitBrains.Pathfinding;
+using Unit = Model.Runtime.Unit;
+using Assets.Scripts.StatusEffects;
 
 public class SupportUnitBrain : DefaultPlayerUnitBrain
 {
     public override string TargetUnitName => "Support";
-    //public override bool IsPlayerSupportUnitBrain => true;
     private float castModeTimer = 0;
-    private float castCooldown = 0.2f;
-    private float castDelay = 0.5f;
+    private float castCooldown = 0.5f;
+    private float castDelay = 0.1f;
     private float delayTimer = 0;
     private VFXView _vfxView = ServiceLocator.Get<VFXView>();
-    private StatusEffectsSystem _statusEffectsSystem = ServiceLocator.Get<StatusEffectsSystem>();
+    private StatusEffectsFactory _statusEffectsFactory = new StatusEffectsFactory();
     private bool _isCastMode = false;
     private bool _isMovingMode = true;
     private List<IReadOnlyUnit> _allies;
+    IStatusEffects<Unit> statusEffect = null;
 
-    protected override void GenerateProjectiles(Vector2Int forTarget, List<BaseProjectile> intoList)
-    {
-    }
+    protected override void GenerateProjectiles(Vector2Int forTarget, List<BaseProjectile> intoList) { }
 
-    protected void CastBuffs(StatusEffectsSystem statusEffectsSystem)
+    protected void CastBuffs(StatusEffectsFactory _statusEffectsFactory)
     {
         _allies = runtimeModel.RoUnits.Where(u => u.Config.IsPlayerUnit == IsPlayerUnitBrain).ToList();
         Debug.Log($"Number of allies: {_allies.Count}");
 
         foreach (Unit ally in _allies)
         {
-            Debug.Log($"Checking ally at position: {ally.Pos}");
-
-            if (IsTargetInRange(ally.Pos) &&
-                !statusEffectsSystem.HasStatusEffect(ally, typeof(SpeedBuff)) &&
-                !statusEffectsSystem.HasStatusEffect(ally, typeof(AttackSpeedBuff)))
+            statusEffect = _statusEffectsFactory.CreateStatusEffect(ally.Config);
+            var unitType = ally.Config.Type;
+            if (IsTargetInRange(ally.Pos))
             {
-                statusEffectsSystem.AddStatusEffect(ally, new AttackSpeedBuff(ally));
-                statusEffectsSystem.AddStatusEffect(ally, new SpeedBuff(ally));
+                ally.AddStatusEffect(statusEffect);
                 _vfxView.PlayVFX(ally.Pos, VFXView.VFXType.BuffApplied);
-                Debug.Log($"Buffs applied to ally at position: {ally.Pos}");
+                Debug.Log($"{statusEffect.GetType()} applied to ally at position: {ally.Pos}");
             }
             else
             {
-                Debug.Log($"Ally at position: {ally.Pos} is not in range or already has buffs.");
+                Debug.Log($"Ally at position: {ally.Pos} is not in range or already has {statusEffect.GetType()} buff.");
             }
         }
     }
@@ -58,21 +52,19 @@ public class SupportUnitBrain : DefaultPlayerUnitBrain
         base.Update(deltaTime, time);
         castModeTimer += deltaTime;
 
-        Debug.Log($"Update called. castModeTimer: {castModeTimer}, _isCastMode: {_isCastMode}, _isMovingMode: {_isMovingMode}");
-
         if (_isCastMode)
         {
             delayTimer += deltaTime;
-            Debug.Log($"In cast mode. delayTimer: {delayTimer}");
-
             if (delayTimer >= castDelay)
             {
-                CastBuffs(_statusEffectsSystem);
-                delayTimer = 0;
-                _isCastMode = false;
-                _isMovingMode = true;
-                castModeTimer = 0f;
-                Debug.Log("Cast mode ended.");
+                if (_statusEffectsFactory != null)
+                {
+                    CastBuffs(_statusEffectsFactory);
+                    delayTimer = 0;
+                    _isCastMode = false;
+                    _isMovingMode = true;
+                    castModeTimer = 0f;
+                }
             }
         }
         else
@@ -83,7 +75,6 @@ public class SupportUnitBrain : DefaultPlayerUnitBrain
                 _isMovingMode = false;
                 castModeTimer = 0f;
                 delayTimer = 0;
-                Debug.Log("Cast mode started.");
             }
         }
     }
@@ -92,5 +83,4 @@ public class SupportUnitBrain : DefaultPlayerUnitBrain
     {
         return _isMovingMode ? base.GetNextStep() : unit.Pos;
     }
-
 }

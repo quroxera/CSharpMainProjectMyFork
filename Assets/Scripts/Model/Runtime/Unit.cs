@@ -1,14 +1,13 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using Assets.Scripts.StatusEffects;
 using Assets.Scripts.UnitBrains.Player;
-using Codice.Client.Commands;
-using Codice.Client.Common;
-using Codice.CM.Client.Differences;
 using Model.Config;
 using Model.Runtime.Projectiles;
 using Model.Runtime.ReadOnly;
 using UnitBrains;
 using UnitBrains.Pathfinding;
+using UnitBrains.Player;
 using UnityEngine;
 using Utilities;
 
@@ -19,19 +18,20 @@ namespace Model.Runtime
         public UnitConfig Config { get; }
         public Vector2Int Pos { get; private set; }
         public int Health { get; private set; }
+        public float movementSpeedModifier = 1f;
+        public float attackSpeedModifier = 1f;
+
+        public float attackRangeModifier = 1f;
         public bool IsDead => Health <= 0;
         public BaseUnitPath ActivePath => _brain?.ActivePath;
         public IReadOnlyList<BaseProjectile> PendingProjectiles => _pendingProjectiles;
-
         private readonly List<BaseProjectile> _pendingProjectiles = new();
         private IReadOnlyRuntimeModel _runtimeModel;
         private BaseUnitBrain _brain;
-
-        private StatusEffectsSystem _statusEffectsSystem;
-
         private float _nextBrainUpdateTime = 0f;
         private float _nextMoveTime = 0f;
         private float _nextAttackTime = 0f;
+        private List<IStatusEffects<Unit>> activeStatusEffects = new List<IStatusEffects<Unit>>();
 
         public Unit(UnitConfig config, Vector2Int startPos, UnitsCoordinator unitsCoordinator)
         {
@@ -42,10 +42,8 @@ namespace Model.Runtime
             _brain.SetUnit(this);
             _brain.SetCoordinator(unitsCoordinator);
             _runtimeModel = ServiceLocator.Get<IReadOnlyRuntimeModel>();
-
-            _statusEffectsSystem = ServiceLocator.Get<StatusEffectsSystem>();
-
         }
+
 
         public void Update(float deltaTime, float time)
         {
@@ -60,30 +58,32 @@ namespace Model.Runtime
 
             if (_nextMoveTime < time)
             {
-                float moveModifier = 1f;
-
-                //if (Random.Range(1, 100) <= 10)
-                //{
-                //    ServiceLocator.Get<StatusEffectsSystem>().AddStatusEffect(this, new SpeedBuff(this));
-                //    moveModifier = _statusEffectsSystem.GetMovementSpeedModifier(this);
-                //}
-                _nextMoveTime = time + Config.MoveDelay * moveModifier;
-                //Debug.Log("Move modifier: " + moveModifier);
-                //Debug.Log("Next move time: " + _nextMoveTime);
+                _nextMoveTime = time + Config.MoveDelay * movementSpeedModifier;
                 Move();
             }
 
             if (_nextAttackTime < time && Attack())
             {
-                float attackModifier = 1f;
-                //if (Random.Range(1, 100) <= 10)
-                //{
-                //    ServiceLocator.Get<StatusEffectsSystem>().AddStatusEffect(this, new AttackSpeedBuff(this));
-                //    attackModifier = _statusEffectsSystem.GetAttackSpeedModifier(this);
-                //}
-                _nextAttackTime = time + Config.AttackDelay * attackModifier;
-                //Debug.Log("AttackModifier: " + attackModifier);
-                //Debug.Log("Next attack time: " + _nextAttackTime);
+                _nextAttackTime = time + Config.AttackDelay * attackSpeedModifier;
+            }
+
+            if (activeStatusEffects != null)
+            {
+                List<IStatusEffects<Unit>> effectsToRemove = new List<IStatusEffects<Unit>>();
+                foreach (IStatusEffects<Unit> statusEffect in activeStatusEffects)
+                {
+                    statusEffect.UpdateDuration(this, deltaTime);
+                    if (statusEffect.Duration <= 0)
+                    {
+                        effectsToRemove.Add(statusEffect);
+                    }
+                }
+                foreach (var statusEffect in effectsToRemove)
+                {
+                    statusEffect.Remove(this);
+                    activeStatusEffects.Remove(statusEffect);
+                    Debug.Log($"{statusEffect.GetType()} removed for {Pos}");
+                }
             }
         }
 
@@ -106,13 +106,11 @@ namespace Model.Runtime
                 Debug.LogError($"Brain for unit {Config.Name} returned invalid move: {delta}");
                 return;
             }
-
             if (_runtimeModel.RoMap[targetPos] ||
                 _runtimeModel.RoUnits.Any(u => u.Pos == targetPos))
             {
                 return;
             }
-
             Pos = targetPos;
         }
 
@@ -124,11 +122,39 @@ namespace Model.Runtime
         public void TakeDamage(int projectileDamage)
         {
             Health -= projectileDamage;
-            //if (Random.Range(1, 100) <= 5)
-            //{
-            //    ServiceLocator.Get<StatusEffectsSystem>().AddStatusEffect(this, new SlowDebuff(this));
-            //    ServiceLocator.Get<StatusEffectsSystem>().AddStatusEffect(this, new AttackSpeedDebuff(this));
-            //}
+        }
+
+        public void AddStatusEffect(IStatusEffects<Unit> statusEffects)
+        {
+            if (statusEffects != null)
+            {
+                if (statusEffects.CanBeAppliedTo(this))
+                {
+                    statusEffects.Apply(this);
+                    activeStatusEffects.Add(statusEffects);
+                }
+            }
+        }
+
+        public void SetMovementSpeedModifier(float modifier)
+        {
+            movementSpeedModifier = modifier;
+        }
+
+        public void SetAttackSpeedModifier(float modifier)
+        {
+            attackSpeedModifier = modifier;
+        }
+
+        public void ModifyAttackRange(float modifier)
+        {
+            attackRangeModifier = modifier;
+            ThirdUnitBrain.AttackRangeModifier = attackRangeModifier;
+        }
+
+        public void SetDoubleAttackActive(bool isActive)
+        {
+            SecondUnitBrain.IsDoubleAttackActive = isActive;
         }
     }
 }

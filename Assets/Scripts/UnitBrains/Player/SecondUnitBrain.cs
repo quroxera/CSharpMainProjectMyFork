@@ -25,6 +25,7 @@ namespace UnitBrains.Player
         private static int unitCounter = 0;
         private int unitNumber = 0;
         private const int maxTargets = 3;
+        public static bool IsDoubleAttackActive { get; set; }
 
 
         public SecondUnitBrain()
@@ -36,16 +37,23 @@ namespace UnitBrains.Player
         {
             float overheatTemperature = OverheatTemperature;
             float currentTemperature = GetTemperature();
+
             if (currentTemperature >= overheatTemperature)
             {
                 return;
             }
 
             IncreaseTemperature();
+
             for (int i = 0; i <= currentTemperature; i++)
             {
                 var projectile = CreateProjectile(forTarget);
                 AddProjectileToList(projectile, intoList);
+                if (IsDoubleAttackActive)
+                {
+                    var secondProjectile = CreateProjectile(forTarget);
+                    AddProjectileToList(secondProjectile, intoList);
+                }
             }
         }
 
@@ -65,7 +73,6 @@ namespace UnitBrains.Player
                 return base.GetNextStep();
             }
         }
-
 
         protected override List<Vector2Int> SelectTargets()
         {
@@ -105,7 +112,6 @@ namespace UnitBrains.Player
             return result;
         }
 
-
         public override void Update(float deltaTime, float time)
         {
             if (_overheated)
@@ -130,7 +136,10 @@ namespace UnitBrains.Player
         private void IncreaseTemperature()
         {
             _temperature += 1f;
-            if (_temperature >= OverheatTemperature) _overheated = true;
+            if (_temperature >= OverheatTemperature)
+            {
+                _overheated = true;
+            }
         }
     }
 }

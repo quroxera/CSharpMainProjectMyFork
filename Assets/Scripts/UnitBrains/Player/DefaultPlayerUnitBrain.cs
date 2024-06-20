@@ -1,8 +1,6 @@
 ﻿using System.Collections.Generic;
-using System.IO;
 using Assets.Scripts.UnitBrains.Player;
 using Model;
-using Model.Runtime.ReadOnly;
 using UnitBrains.Pathfinding;
 using UnityEngine;
 using Utilities;
@@ -57,8 +55,6 @@ namespace UnitBrains.Player
 
             return result;
         }
-
-
 
         private bool IsTargetInVisionRange(Vector2Int targetPos)
         {

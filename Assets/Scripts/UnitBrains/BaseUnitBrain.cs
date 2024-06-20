@@ -15,7 +15,6 @@ namespace UnitBrains
     {
         public virtual string TargetUnitName => string.Empty;
         public virtual bool IsPlayerUnitBrain => true;
-        //public virtual bool IsPlayerSupportUnitBrain => false;
         public virtual BaseUnitPath ActivePath => _activePath;
 
         protected Unit unit { get; private set; }
@@ -124,7 +123,7 @@ namespace UnitBrains
             return units;
         }
 
-        protected bool HasTargetsInRange()
+        protected virtual bool HasTargetsInRange()
         {
             var attackRangeSqr = unit.Config.AttackRange * unit.Config.AttackRange;
             foreach (var possibleTarget in GetAllTargets())
@@ -151,7 +150,7 @@ namespace UnitBrains
                 .Append(runtimeModel.RoMap.Bases[IsPlayerUnitBrain ? RuntimeModel.BotPlayerId : RuntimeModel.PlayerId]);
         }
 
-        protected bool IsTargetInRange(Vector2Int targetPos)
+        protected virtual bool IsTargetInRange(Vector2Int targetPos)
         {
             var attackRangeSqr = unit.Config.AttackRange * unit.Config.AttackRange;
             var diff = targetPos - unit.Pos;

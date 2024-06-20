@@ -1,4 +1,5 @@
 using Codice.Client.Common.GameUI;
+using Model.Config;
 using Model.Runtime.Projectiles;
 using System.Collections;
 using System.Collections.Generic;
@@ -11,6 +12,8 @@ public class ThirdUnitBrain : DefaultPlayerUnitBrain
     private bool isMovingMode = true;
     private bool isAttackMode = false;
     private float changingModeTimer;
+    public static float AttackRangeModifier { get; set; }
+
 
     protected override void GenerateProjectiles(Vector2Int forTarget, List<BaseProjectile> intoList)
     {
@@ -62,5 +65,26 @@ public class ThirdUnitBrain : DefaultPlayerUnitBrain
                 }
             }
         }
+    }
+
+    protected override bool HasTargetsInRange()
+    {
+        if (AttackRangeModifier == 0)
+            AttackRangeModifier = 1;
+        var attackRangeSqr = unit.Config.AttackRange * unit.Config.AttackRange * AttackRangeModifier;
+        foreach (var possibleTarget in GetAllTargets())
+        {
+            var diff = possibleTarget - unit.Pos;
+            if (diff.sqrMagnitude < attackRangeSqr)
+                return true;
+        }
+        return false;
+    }
+
+    protected override bool IsTargetInRange(Vector2Int targetPos)
+    {
+        var attackRangeSqr = unit.Config.AttackRange * unit.Config.AttackRange * AttackRangeModifier;
+        var diff = targetPos - unit.Pos;
+        return diff.sqrMagnitude <= attackRangeSqr;
     }
 }
